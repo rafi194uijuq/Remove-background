@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic Background Eraser</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+        :root {
+            --primary-color: #6C63FF;
+            --secondary-color: #4CAF50;
+            --accent-color: #FF6B6B;
+            --bg-color: #1a1a2e;
+            --text-color: #ffffff;
+            --card-bg: #16213e;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+        }
+
+        .container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            padding: 3rem;
+            width: 90%;
+            max-width: 800px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            color: var(--primary-color);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .upload-area {
+            border: 3px dashed var(--primary-color);
+            border-radius: 20px;
+            padding: 3rem;
+            margin-bottom: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.2);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            background-color: #5753d9;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.4);
+        }
+
+        .progress-container {
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #2c3e50;
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress {
+            width: 0%;
+            height: 100%;
+            background-color: var(--secondary-color);
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: width 0.5s ease-in-out;
+        }
+
+        .progress-text {
+            font-size: 1.2rem;
+            margin-top: 1rem;
+            font-weight: 600;
+        }
+
+        #result {
+            margin-top: 3rem;
+        }
+
+        #resultImage {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        #resultImage:hover {
+            transform: scale(1.05);
+        }
+
+        #downloadButton {
+            background-color: var(--secondary-color);
+            margin-top: 2rem;
+        }
+
+        #downloadButton:hover {
+            background-color: #45a049;
+        }
+
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .spin {
+            animation: spin 20s linear infinite;
+        }
+
+        .success-message {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="particles" id="particles"></div>
+            <h1 class="floating">Magic Background Eraser</h1>
+            <div class="upload-area" id="dropArea">
+                <i class="fas fa-magic upload-icon spin"></i>
+                <p>Drag and drop an image here or click to select</p>
+                <input type="file" id="fileInput" accept="image/*">
+                <button class="btn" id="uploadButton">Upload Image</button>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress" id="progressBar"></div>
+                </div>
+                <p class="progress-text" id="progressText">Processing: 0%</p>
+            </div>
+            <div class="success-message" id="successMessage">
+                <i class="fas fa-check-circle"></i> Background removed successfully!
+            </div>
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = 'YOUR_REMOVE_BG_API_KEY'; // Ganti dengan API key Anda
+        const dropArea = document.getElementById('dropArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadButton = document.getElementById('uploadButton');
+        const progressContainer = document.querySelector('.progress-container');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const result = document.getElementById('result');
+        const successMessage = document.getElementById('successMessage');
+
+        // Particle animation
+        function createParticles() {
+            const particles = document.getElementById('particles');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.width = Math.random() * 5 + 'px';
+                particle.style.height = particle.style.width;
+                particles.appendChild(particle);
+            }
+        }
+
+        createParticles();
+
+        dropArea.addEventListener('click', () => fileInput.click());
+        dropArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropArea.style.backgroundColor = 'rgba(108, 99, 255, 0.1)';
+        });
+        dropArea.addEventListener('dragleave', () => {
+            dropArea.style.backgroundColor = '';
+        });
+        dropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropArea.style.backgroundColor = '';
+            fileInput.files = e.dataTransfer.files;
+        });
+
+        uploadButton.addEventListener('click', () => {
+            if (fileInput.files.length > 0) {
+                uploadImage(fileInput.files[0]);
+            } else {
+                alert('Please select an image first.');
+            }
+        });
+
+        function uploadImage(file) {
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+            progressText.textContent = 'Processing: 0%';
+            successMessage.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('image_file', file);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'https://api.remove.bg/v1.0/removebg', true);
+            xhr.setRequestHeader('X-Api-Key', apiKey);
+
+            xhr.upload.onprogress = (event) => {
+                if (event.lengthComputable) {
+                    const percentComplete = (event.loaded / event.total) * 100;
+                    progressBar.style.width = percentComplete + '%';
+                    progressText.textContent = `Uploading: ${Math.round(percentComplete)}%`;
+                }
+            };
+
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    const blob = new Blob([xhr.response], {type: 'image/png'});
+                    const url = URL.createObjectURL(blob);
+                    displayResult(url);
+                    successMessage.style.display = 'block';
+                } else {
+                    console.error('Error:', xhr.statusText);
+                    alert('An error occurred. Please try again.');
+                }
+                progressContainer.style.display = 'none';
+            };
+
+            xhr.onerror = function() {
+                console.error('Error:', xhr.statusText);
+                alert('An error occurred. Please try again.');
+                progressContainer.style.display = 'none';
+            };
+
+            xhr.responseType = 'arraybuffer';
+            xhr.send(formData);
+
+            simulateProcessing();
+        }
+
+        function simulateProcessing() {
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 5;
+                if (progress > 90) {
+                    clearInterval(interval);
+                } else {
+                    progressBar.style.width = `${progress}%`;
+                    progressText.textContent = `Processing: ${progress}%`;
+                }
+            }, 300);
+        }
+
+        function displayResult(imageUrl) {
+            result.innerHTML = `
+                <img id="resultImage" src="${imageUrl}" alt="Result">
+                <br>
+                <button class="btn" id="downloadButton">Download Image</button>
+            `;
+
+            document.getElementById('downloadButton').addEventListener('click', () => {
+                const a = document.createElement('a');
+                a.href = imageUrl;
+                a.download = 'background_removed.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            });
+        }
+    </script>
+</body>
+  </html>
